@@ -1,10 +1,18 @@
-import { Link } from "react-router-dom";
-import { Search, Menu, X } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { Search, Menu, X, LogOut, User } from "lucide-react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { user, loading, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/");
+  };
 
   return (
     <nav className="sticky top-0 z-50 bg-card/80 backdrop-blur-lg border-b border-border">
@@ -30,9 +38,29 @@ const Navbar = () => {
           <button className="p-2 rounded-full hover:bg-muted transition-colors">
             <Search className="w-5 h-5 text-foreground" />
           </button>
-          <button className="px-4 py-2 text-sm font-medium rounded-full bg-primary text-primary-foreground hover:opacity-90 transition-opacity">
-            Sign In
-          </button>
+          {!loading && (
+            user ? (
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary text-sm font-bold">
+                  {user.email?.charAt(0).toUpperCase()}
+                </div>
+                <button
+                  onClick={handleSignOut}
+                  className="p-2 rounded-full hover:bg-muted transition-colors"
+                  title="Sign out"
+                >
+                  <LogOut className="w-4 h-4 text-muted-foreground" />
+                </button>
+              </div>
+            ) : (
+              <Link
+                to="/auth"
+                className="px-4 py-2 text-sm font-medium rounded-full bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
+              >
+                Sign In
+              </Link>
+            )
+          )}
         </div>
 
         <button className="md:hidden p-2" onClick={() => setMobileOpen(!mobileOpen)}>
@@ -52,9 +80,22 @@ const Navbar = () => {
               <Link to="/" className="py-2 text-sm font-medium" onClick={() => setMobileOpen(false)}>Experiences</Link>
               <Link to="/" className="py-2 text-sm text-muted-foreground" onClick={() => setMobileOpen(false)}>Destinations</Link>
               <Link to="/" className="py-2 text-sm text-muted-foreground" onClick={() => setMobileOpen(false)}>Guides</Link>
-              <button className="mt-2 py-2 text-sm font-medium rounded-full bg-primary text-primary-foreground">
-                Sign In
-              </button>
+              {user ? (
+                <button
+                  onClick={() => { handleSignOut(); setMobileOpen(false); }}
+                  className="mt-2 py-2 text-sm font-medium rounded-full border border-border text-foreground"
+                >
+                  Sign Out
+                </button>
+              ) : (
+                <Link
+                  to="/auth"
+                  onClick={() => setMobileOpen(false)}
+                  className="mt-2 py-2 text-sm font-medium rounded-full bg-primary text-primary-foreground text-center"
+                >
+                  Sign In
+                </Link>
+              )}
             </div>
           </motion.div>
         )}
