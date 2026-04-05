@@ -14,16 +14,278 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      bookings: {
+        Row: {
+          booking_date: string
+          created_at: string
+          experience_id: string
+          guests: number
+          id: string
+          status: string
+          total_price: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          booking_date: string
+          created_at?: string
+          experience_id: string
+          guests?: number
+          id?: string
+          status?: string
+          total_price: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          booking_date?: string
+          created_at?: string
+          experience_id?: string
+          guests?: number
+          id?: string
+          status?: string
+          total_price?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_experience_id_fkey"
+            columns: ["experience_id"]
+            isOneToOne: false
+            referencedRelation: "experiences"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      experiences: {
+        Row: {
+          activities: string[]
+          category: string
+          created_at: string
+          description: string
+          duration: string
+          guide_id: string
+          id: string
+          images: string[]
+          is_active: boolean | null
+          landmarks: string[]
+          location: string
+          max_guests: number
+          price: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          activities?: string[]
+          category: string
+          created_at?: string
+          description: string
+          duration: string
+          guide_id: string
+          id?: string
+          images?: string[]
+          is_active?: boolean | null
+          landmarks?: string[]
+          location: string
+          max_guests?: number
+          price: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          activities?: string[]
+          category?: string
+          created_at?: string
+          description?: string
+          duration?: string
+          guide_id?: string
+          id?: string
+          images?: string[]
+          is_active?: boolean | null
+          landmarks?: string[]
+          location?: string
+          max_guests?: number
+          price?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "experiences_guide_id_fkey"
+            columns: ["guide_id"]
+            isOneToOne: false
+            referencedRelation: "guide_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      guide_profiles: {
+        Row: {
+          created_at: string
+          id: string
+          languages: string[]
+          specialties: string[]
+          updated_at: string
+          user_id: string
+          verified: boolean | null
+          years_experience: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          languages?: string[]
+          specialties?: string[]
+          updated_at?: string
+          user_id: string
+          verified?: boolean | null
+          years_experience?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          languages?: string[]
+          specialties?: string[]
+          updated_at?: string
+          user_id?: string
+          verified?: boolean | null
+          years_experience?: number | null
+        }
+        Relationships: []
+      }
+      itinerary_items: {
+        Row: {
+          day_number: number
+          description: string
+          experience_id: string
+          id: string
+          title: string
+        }
+        Insert: {
+          day_number: number
+          description: string
+          experience_id: string
+          id?: string
+          title: string
+        }
+        Update: {
+          day_number?: number
+          description?: string
+          experience_id?: string
+          id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "itinerary_items_experience_id_fkey"
+            columns: ["experience_id"]
+            isOneToOne: false
+            referencedRelation: "experiences"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string
+          full_name: string
+          id: string
+          phone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          full_name?: string
+          id?: string
+          phone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          full_name?: string
+          id?: string
+          phone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      reviews: {
+        Row: {
+          comment: string | null
+          created_at: string
+          experience_id: string
+          id: string
+          rating: number
+          user_id: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          experience_id: string
+          id?: string
+          rating: number
+          user_id: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          experience_id?: string
+          id?: string
+          rating?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_experience_id_fkey"
+            columns: ["experience_id"]
+            isOneToOne: false
+            referencedRelation: "experiences"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "tourist" | "guide" | "admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +412,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["tourist", "guide", "admin"],
+    },
   },
 } as const
