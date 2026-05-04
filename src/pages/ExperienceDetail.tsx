@@ -177,7 +177,7 @@ const ExperienceDetail = () => {
           </div>
 
           <div className="mt-12">
-            <ReviewsSection rating={experience.rating} reviewCount={experience.reviewCount} />
+            <ReviewsSection experienceId={experience.id} rating={experience.rating} reviewCount={experience.reviewCount} />
           </div>
         </motion.div>
       </div>
