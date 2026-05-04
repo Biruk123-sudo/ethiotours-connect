@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Review {
   id: string;
@@ -28,27 +29,63 @@ interface ReviewsSectionProps {
   reviewCount: number;
 }
 
-const STORAGE_PREFIX = "ethio_reviews_";
 const MAX_COMMENT = 1000;
+
+const formatDate = (iso: string) =>
+  new Date(iso).toLocaleDateString(undefined, { month: "long", year: "numeric" });
 
 const ReviewsSection = ({ experienceId, rating, reviewCount }: ReviewsSectionProps) => {
   const { user } = useAuth();
-  const [userReviews, setUserReviews] = useState<Review[]>([]);
+  const [dbReviews, setDbReviews] = useState<Review[]>([]);
+  const [loading, setLoading] = useState(true);
   const [newRating, setNewRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [comment, setComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_PREFIX + experienceId);
-      setUserReviews(raw ? JSON.parse(raw) : []);
-    } catch {
-      setUserReviews([]);
+  const loadReviews = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("reviews")
+      .select("id, rating, comment, created_at, user_id")
+      .eq("experience_slug", experienceId)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Failed to load reviews", error);
+      setDbReviews([]);
+      setLoading(false);
+      return;
     }
+
+    const rows = data ?? [];
+    // Fetch reviewer display names via the public profile function
+    const profiles = await Promise.all(
+      rows.map((r) =>
+        supabase.rpc("get_public_profile", { profile_user_id: r.user_id })
+      )
+    );
+
+    const reviews: Review[] = rows.map((r, i) => {
+      const p = profiles[i].data?.[0];
+      return {
+        id: r.id,
+        name: p?.full_name?.trim() || "Traveler",
+        date: formatDate(r.created_at),
+        rating: r.rating,
+        comment: r.comment ?? "",
+      };
+    });
+    setDbReviews(reviews);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadReviews();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [experienceId]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
     if (newRating < 1 || newRating > 5) {
@@ -66,32 +103,32 @@ const ReviewsSection = ({ experienceId, rating, reviewCount }: ReviewsSectionPro
     }
 
     setSubmitting(true);
-    const review: Review = {
-      id: `u_${Date.now()}`,
-      name:
-        (user.user_metadata?.full_name as string) ||
-        user.email?.split("@")[0] ||
-        "Traveler",
-      date: new Date().toLocaleDateString(undefined, { month: "long", year: "numeric" }),
+    const { error } = await supabase.from("reviews").insert({
+      user_id: user.id,
+      experience_slug: experienceId,
       rating: newRating,
       comment: trimmed,
-    };
-    const next = [review, ...userReviews];
-    try {
-      localStorage.setItem(STORAGE_PREFIX + experienceId, JSON.stringify(next));
-      setUserReviews(next);
-      setNewRating(0);
-      setComment("");
-      toast({ title: "Review submitted", description: "Thanks for sharing your experience!" });
-    } catch {
-      toast({ title: "Could not save review", variant: "destructive" });
-    } finally {
-      setSubmitting(false);
+    });
+    setSubmitting(false);
+
+    if (error) {
+      const isDup = error.code === "23505";
+      toast({
+        title: isDup ? "You've already reviewed this experience" : "Could not submit review",
+        description: isDup ? "You can edit your review by deleting the old one." : error.message,
+        variant: "destructive",
+      });
+      return;
     }
+
+    setNewRating(0);
+    setComment("");
+    toast({ title: "Review submitted", description: "Thanks for sharing your experience!" });
+    loadReviews();
   };
 
-  const allReviews = [...userReviews, ...SAMPLE_REVIEWS];
-  const totalCount = reviewCount + userReviews.length;
+  const allReviews = [...dbReviews, ...SAMPLE_REVIEWS];
+  const totalCount = reviewCount + dbReviews.length;
 
   return (
     <section aria-label="Reviews" className="border-t border-border pt-8">
@@ -168,41 +205,45 @@ const ReviewsSection = ({ experienceId, rating, reviewCount }: ReviewsSectionPro
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        {allReviews.map((review, i) => (
-          <motion.article
-            key={review.id}
-            initial={{ opacity: 0, y: 10 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.3, delay: i * 0.05 }}
-            className="bg-card border border-border rounded-2xl p-5"
-          >
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-full bg-accent/20 text-accent flex items-center justify-center font-bold">
-                {review.name.charAt(0)}
+      {loading ? (
+        <p className="text-sm text-muted-foreground">Loading reviews...</p>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          {allReviews.map((review, i) => (
+            <motion.article
+              key={review.id}
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.3, delay: i * 0.05 }}
+              className="bg-card border border-border rounded-2xl p-5"
+            >
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-full bg-accent/20 text-accent flex items-center justify-center font-bold">
+                  {review.name.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <p className="font-semibold text-foreground text-sm">{review.name}</p>
+                  <p className="text-xs text-muted-foreground">{review.date}</p>
+                </div>
               </div>
-              <div>
-                <p className="font-semibold text-foreground text-sm">{review.name}</p>
-                <p className="text-xs text-muted-foreground">{review.date}</p>
+              <div className="flex items-center gap-0.5 mb-2">
+                {Array.from({ length: 5 }).map((_, idx) => (
+                  <Star
+                    key={idx}
+                    className={`w-3.5 h-3.5 ${
+                      idx < review.rating ? "text-secondary fill-secondary" : "text-muted"
+                    }`}
+                  />
+                ))}
               </div>
-            </div>
-            <div className="flex items-center gap-0.5 mb-2">
-              {Array.from({ length: 5 }).map((_, idx) => (
-                <Star
-                  key={idx}
-                  className={`w-3.5 h-3.5 ${
-                    idx < review.rating ? "text-secondary fill-secondary" : "text-muted"
-                  }`}
-                />
-              ))}
-            </div>
-            <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
-              {review.comment}
-            </p>
-          </motion.article>
-        ))}
-      </div>
+              <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                {review.comment}
+              </p>
+            </motion.article>
+          ))}
+        </div>
+      )}
     </section>
   );
 };
