@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Star, MapPin, Clock } from "lucide-react";
 import { motion } from "framer-motion";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import type { Experience } from "@/data/experiences";
 
 interface ExperienceCardProps {
@@ -9,6 +10,7 @@ interface ExperienceCardProps {
 }
 
 const ExperienceCard = ({ experience, index }: ExperienceCardProps) => {
+  const { format } = useCurrency();
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -48,7 +50,7 @@ const ExperienceCard = ({ experience, index }: ExperienceCardProps) => {
                 {experience.duration}
               </div>
               <p className="text-sm">
-                <span className="font-semibold text-foreground">${experience.price}</span>
+                <span className="font-semibold text-foreground">{format(experience.price)}</span>
                 <span className="text-muted-foreground text-xs"> / person</span>
               </p>
             </div>
