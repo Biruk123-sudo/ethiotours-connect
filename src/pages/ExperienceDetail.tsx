@@ -120,7 +120,7 @@ const ExperienceDetail = () => {
             <div className="lg:col-span-1">
               <div className="sticky top-24 bg-card rounded-2xl p-6 border border-border shadow-[var(--card-shadow)]">
                 <div className="flex items-baseline gap-1 mb-6">
-                  <span className="text-3xl font-bold text-foreground">${experience.price}</span>
+                  <span className="text-3xl font-bold text-foreground">{format(experience.price)}</span>
                   <span className="text-muted-foreground text-sm">/ person</span>
                 </div>
 
@@ -159,12 +159,12 @@ const ExperienceDetail = () => {
 
                 <div className="border-t border-border pt-4 mb-4">
                   <div className="flex justify-between text-sm mb-2">
-                    <span className="text-muted-foreground">${experience.price} × {guests} guests</span>
-                    <span className="text-foreground">${totalPrice}</span>
+                    <span className="text-muted-foreground">{format(experience.price)} × {guests} guests</span>
+                    <span className="text-foreground">{format(totalPrice)}</span>
                   </div>
                   <div className="flex justify-between font-semibold text-foreground">
                     <span>Total</span>
-                    <span>${totalPrice}</span>
+                    <span>{format(totalPrice)}</span>
                   </div>
                 </div>
 
@@ -174,6 +174,10 @@ const ExperienceDetail = () => {
                 <p className="text-xs text-center text-muted-foreground mt-3">You won't be charged yet</p>
               </div>
             </div>
+          </div>
+
+          <div className="mt-12">
+            <ReviewsSection rating={experience.rating} reviewCount={experience.reviewCount} />
           </div>
         </motion.div>
       </div>
