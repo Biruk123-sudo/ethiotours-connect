@@ -1,12 +1,14 @@
 import { Link, useNavigate } from "react-router-dom";
-import { Search, Menu, X, LogOut, User } from "lucide-react";
+import { Search, Menu, X, LogOut, User, Sun, Moon } from "lucide-react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTheme } from "@/contexts/ThemeContext";
 
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { user, loading, signOut } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
@@ -37,6 +39,18 @@ const Navbar = () => {
         <div className="hidden md:flex items-center gap-3">
           <button className="p-2 rounded-full hover:bg-muted transition-colors">
             <Search className="w-5 h-5 text-foreground" />
+          </button>
+          <button
+            onClick={toggleTheme}
+            className="p-2 rounded-full hover:bg-muted transition-colors"
+            title={theme === "light" ? "Switch to dark mode" : "Switch to light mode"}
+            aria-label="Toggle theme"
+          >
+            {theme === "light" ? (
+              <Moon className="w-5 h-5 text-foreground" />
+            ) : (
+              <Sun className="w-5 h-5 text-foreground" />
+            )}
           </button>
           {!loading && (
             user ? (
