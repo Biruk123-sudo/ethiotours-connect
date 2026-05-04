@@ -222,7 +222,8 @@ export type Database = {
         Row: {
           comment: string | null
           created_at: string
-          experience_id: string
+          experience_id: string | null
+          experience_slug: string | null
           id: string
           rating: number
           user_id: string
@@ -230,7 +231,8 @@ export type Database = {
         Insert: {
           comment?: string | null
           created_at?: string
-          experience_id: string
+          experience_id?: string | null
+          experience_slug?: string | null
           id?: string
           rating: number
           user_id: string
@@ -238,7 +240,8 @@ export type Database = {
         Update: {
           comment?: string | null
           created_at?: string
-          experience_id?: string
+          experience_id?: string | null
+          experience_slug?: string | null
           id?: string
           rating?: number
           user_id?: string
