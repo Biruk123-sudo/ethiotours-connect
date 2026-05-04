@@ -4,12 +4,15 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import ReviewsSection from "@/components/ReviewsSection";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { experiences } from "@/data/experiences";
 
 const ExperienceDetail = () => {
   const { id } = useParams();
   const experience = experiences.find((e) => e.id === id);
   const [guests, setGuests] = useState(2);
+  const { format } = useCurrency();
 
   if (!experience) {
     return (
