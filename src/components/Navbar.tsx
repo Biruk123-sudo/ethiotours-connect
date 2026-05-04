@@ -4,11 +4,13 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useCurrency, CURRENCIES, CurrencyCode } from "@/contexts/CurrencyContext";
 
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { user, loading, signOut } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const { currency, setCurrency } = useCurrency();
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
@@ -40,6 +42,19 @@ const Navbar = () => {
           <button className="p-2 rounded-full hover:bg-muted transition-colors">
             <Search className="w-5 h-5 text-foreground" />
           </button>
+          <select
+            value={currency}
+            onChange={(e) => setCurrency(e.target.value as CurrencyCode)}
+            className="px-2 py-1.5 rounded-full bg-muted text-foreground text-xs font-medium border border-border focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
+            aria-label="Select currency"
+            title="Select currency"
+          >
+            {Object.values(CURRENCIES).map((c) => (
+              <option key={c.code} value={c.code}>
+                {c.symbol} {c.code}
+              </option>
+            ))}
+          </select>
           <button
             onClick={toggleTheme}
             className="p-2 rounded-full hover:bg-muted transition-colors"
